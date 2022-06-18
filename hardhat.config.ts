@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+import "hardhat-jest-plugin";
 
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
