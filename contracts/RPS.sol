@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @custom:dev-run-script scripts/ERC20.ts
  */
 contract RPS is ERC20("RockPaperScissorsCoin", "RPS") {
-    function faucet (uint256 amount) external{
-        _mint(_msgSender(),amount);
+    function faucet(uint256 amount) external {
+        _mint(_msgSender(), amount);
     }
 }
