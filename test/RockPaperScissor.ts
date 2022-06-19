@@ -119,4 +119,9 @@ describe("RockPaperScissors", () => {
       ethers.utils.parseEther("0")
     );
   });
+  it("After game reset state", async () => {
+    const { game } = await setupWithGame("3", "2");
+    expect(await game.userA()).to.equal(ethers.constants.AddressZero);
+    expect(await game.userB()).to.equal(ethers.constants.AddressZero);
+  });
 });

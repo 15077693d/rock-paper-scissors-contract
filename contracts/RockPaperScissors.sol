@@ -20,10 +20,28 @@ contract RockPaperScissors {
         tokenAddress = _tokenAddress;
         bettingAmount = _bettingAmount;
     }
-    function reveal(string calldata salt) public{
+
+    modifier RoomNotFull(){
+        require(userA==address(0)||userB==address(0),"Room is full");
+        _;
+    }
+
+    modifier TwoHashesReady(){
+        require(hashes[userA]!=0&&hashes[userB]!=0,"Two Hashes are not Ready");
+        _;
+    }
+
+    function reveal(string calldata salt) public TwoHashesReady{
         assignOption(salt,msg.sender);
         if(options[userA]!=0&&options[userB]!=0){
             selectWinner();
+            // reset
+            options[userA]=0;
+            options[userA]=0;
+            hashes[userB]=0;
+            hashes[userB]=0;
+            userA=address(0);
+            userB=address(0);
         }
     }
 
@@ -58,7 +76,7 @@ contract RockPaperScissors {
             }
     }
 
-    function commit(bytes32 _hash) public {
+    function commit(bytes32 _hash) public RoomNotFull{
         if (userA == address(0)) {
             userA = msg.sender;
             hashes[userA] = _hash;
