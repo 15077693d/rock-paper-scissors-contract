@@ -4,6 +4,8 @@ import {
   RockPaperScissors as RockPaperScissorsType,
   RPS as RPSType,
 } from "../typechain";
+const saltA = "1234";
+const saltB = "2345";
 const setup = async () => {
   const RPS = await ethers.getContractFactory("RPS");
   const rps = (await RPS.deploy()) as RPSType;
@@ -22,8 +24,8 @@ const setup = async () => {
   };
 };
 const setupWithGame = async (
-  userAOption: "0" | "1" | "2",
-  userBOption: "0" | "1" | "2"
+  userAOption: "3" | "1" | "2",
+  userBOption: "3" | "1" | "2"
 ) => {
   const { rps, game } = await setup();
   const [userA, userB] = await ethers.getSigners();
@@ -33,8 +35,11 @@ const setupWithGame = async (
   await rps
     .connect(userB)
     .approve(game.address, ethers.utils.parseEther("100000"));
-  await game.setOption(userAOption);
-  await game.connect(userB).setOption(userBOption);
+  await game.commit(await game.getHash(userAOption, saltA));
+  await game.connect(userB).commit(await game.getHash(userBOption, saltB));
+  await game.reveal(saltA);
+  await game.connect(userB).reveal(saltB);
+
   return {
     rps,
     game,
@@ -54,7 +59,7 @@ describe("RockPaperScissors", () => {
     const [userA] = await ethers.getSigners();
     await rps.faucet(ethers.utils.parseEther("100"));
     await rps.approve(game.address, ethers.utils.parseEther("100"));
-    await game.setOption("1");
+    await game.commit(await game.getHash("1", "1234"));
     expect(await rps.balanceOf(userA.address)).to.equal(
       ethers.utils.parseEther("0")
     );
@@ -72,8 +77,9 @@ describe("RockPaperScissors", () => {
     await rps
       .connect(userB)
       .approve(game.address, ethers.utils.parseEther("100"));
-    await game.setOption("1");
-    await game.connect(userB).setOption("1");
+    await game.commit(await game.getHash("1", "1234"));
+    await game.connect(userB).commit(await game.getHash("1", "1234"));
+
     expect(await game.userA()).to.equal(userA.address);
     expect(await game.userB()).to.equal(userB.address);
   });
@@ -89,8 +95,8 @@ describe("RockPaperScissors", () => {
       ethers.utils.parseEther("0")
     );
   });
-  it("(0,1) userA:0 userB:200", async () => {
-    const { rps, userA, userB, game } = await setupWithGame("0", "1");
+  it("(1,2) userA:0 userB:200", async () => {
+    const { rps, userA, userB, game } = await setupWithGame("1", "2");
     expect(await rps.balanceOf(userA.address)).to.equal(
       ethers.utils.parseEther("0")
     );
@@ -101,8 +107,8 @@ describe("RockPaperScissors", () => {
       ethers.utils.parseEther("0")
     );
   });
-  it("(2,1) userA:200 userB:0", async () => {
-    const { rps, userA, userB, game } = await setupWithGame("2", "1");
+  it("(3,2) userA:200 userB:0", async () => {
+    const { rps, userA, userB, game } = await setupWithGame("3", "2");
     expect(await rps.balanceOf(userA.address)).to.equal(
       ethers.utils.parseEther("200")
     );

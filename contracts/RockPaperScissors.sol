@@ -8,15 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 
 contract RockPaperScissors {
-    enum Option {
-        ROCK,
-        PAPER,
-        SCISSORS
-    }
+    // Rock (1) Paper (2) Scissors (3)
     address public userA;
     address public userB;
-    Option private userAOption;
-    Option private userBOption;
+    mapping(address => uint8) private options;
+    mapping(address => bytes32) private hashes;
     address public tokenAddress;
     uint256 public bettingAmount;
 
@@ -24,14 +20,34 @@ contract RockPaperScissors {
         tokenAddress = _tokenAddress;
         bettingAmount = _bettingAmount;
     }
+    function reveal(string calldata salt) public{
+        assignOption(salt,msg.sender);
+        if(options[userA]!=0&&options[userB]!=0){
+            selectWinner();
+        }
+    }
 
+    function assignOption(string calldata salt,address _userAddress) internal{
+        bool isROCK = keccak256(abi.encodePacked("1", salt))==hashes[_userAddress];
+        bool isPAPER = keccak256(abi.encodePacked("2", salt))==hashes[_userAddress];
+        bool isSCISSORS = keccak256(abi.encodePacked("3", salt))==hashes[_userAddress];
+        if(isROCK){
+            options[_userAddress] = 1;
+        }else if(isPAPER) {
+            options[_userAddress] = 2;
+        }else if (isSCISSORS){
+            options[_userAddress] = 3;
+        }
+    }
+    
     function selectWinner() internal {
-        if (userA != address(0) && userB != address(0)) {
-            bool userAWin = (userAOption == Option.PAPER &&
-                userBOption == Option.ROCK) ||
-                (userAOption == Option.SCISSORS &&
-                    userBOption == Option.PAPER) ||
-                (userAOption == Option.ROCK && userBOption == Option.SCISSORS);
+            uint8 userAOption = options[userA];
+            uint8 userBOption = options[userB];
+            bool userAWin = (userAOption == 1 &&
+                userBOption == 3) ||
+                (userAOption == 2 &&
+                    userBOption == 1) ||
+                (userAOption == 3 && userBOption == 2);
             if (userAOption == userBOption) {
                 ERC20(tokenAddress).transfer(userA, bettingAmount);
                 ERC20(tokenAddress).transfer(userB, bettingAmount);
@@ -40,27 +56,29 @@ contract RockPaperScissors {
             } else {
                 ERC20(tokenAddress).transfer(userB, bettingAmount * 2);
             }
-        }
     }
 
-    function setOption(Option _option) public {
+    function commit(bytes32 _hash) public {
         if (userA == address(0)) {
-            userAOption = _option;
             userA = msg.sender;
+            hashes[userA] = _hash;
             ERC20(tokenAddress).transferFrom(
                 msg.sender,
                 address(this),
                 bettingAmount
             );
         } else {
-            userBOption = _option;
             userB = msg.sender;
+            hashes[userB] = _hash;
             ERC20(tokenAddress).transferFrom(
                 msg.sender,
                 address(this),
                 bettingAmount
             );
         }
-        selectWinner();
+    }
+
+    function getHash(string calldata option,string calldata salt) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(option,salt));
     }
 }
