@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "deploy": "npx hardhat run scripts/deploy.ts --network fuji"
   },
   "engines": {
     "node": "16.0.0"

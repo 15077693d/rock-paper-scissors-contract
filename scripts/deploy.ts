@@ -18,8 +18,12 @@ async function main() {
   const rps = await RPS.deploy();
 
   await rps.deployed();
-
   console.log("rps deployed to:", rps.address);
+
+  const GAME = await ethers.getContractFactory("RockPaperScissors");
+  const game = await GAME.deploy(rps.address, ethers.utils.parseEther("100"));
+  await game.deployed();
+  console.log("game deployed to:", game.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
